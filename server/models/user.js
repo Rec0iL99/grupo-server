@@ -19,11 +19,19 @@ const user = new mongoose.Schema({
     required: true,
     unique: true,
   },
+  password: {
+    type: String,
+    required: true,
+  },
   issuer: {
     type: String,
     required: true,
   },
   signUpType: {
+    type: String,
+    required: true,
+  },
+  profilePic: {
     type: String,
     required: true,
   },

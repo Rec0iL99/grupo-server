@@ -7,6 +7,7 @@ const mongoose = require('mongoose');
 
 // Route imports
 const mainRouter = require('./routes/main');
+const usersRouter = require('./routes/users');
 
 const PORT = process.env.SERVER_PORT || 5000;
 
@@ -25,8 +26,11 @@ const PORT = process.env.SERVER_PORT || 5000;
 
 const app = express();
 
+app.use(express.json());
+
 // Adding the routes to server
 app.use('/', mainRouter);
+app.use('/users', usersRouter);
 
 const server = app.listen(PORT, () => {
   const host = os.hostname();
