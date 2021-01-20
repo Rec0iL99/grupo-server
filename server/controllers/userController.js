@@ -190,4 +190,25 @@ const loginUser = (req, res) => {
   }
 };
 
-module.exports = { signUpUser, loginUser };
+const logoutUser = (req, res) => {
+  try {
+    res.clearCookie('grupo_rtk');
+    res.clearCookie('grupo_u');
+    res.status(200).json({
+      status: true,
+      payload: {
+        message: SERVER_RESPONSE.LOGOUT,
+      },
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      status: false,
+      payload: {
+        message: SERVER_RESPONSE.ERROR,
+      },
+    });
+  }
+};
+
+module.exports = { signUpUser, loginUser, logoutUser };
