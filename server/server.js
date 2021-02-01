@@ -4,6 +4,7 @@ if (process.env.NODE_ENV !== 'production') require('dotenv').config();
 const express = require('express');
 const os = require('os');
 const mongoose = require('mongoose');
+const cookieParser = require('cookie-parser');
 
 // Route imports
 const mainRouter = require('./routes/main');
@@ -27,6 +28,8 @@ const PORT = process.env.SERVER_PORT || 5000;
 const app = express();
 
 app.use(express.json());
+
+app.use(cookieParser());
 
 // Adding the routes to server
 app.use('/', mainRouter);

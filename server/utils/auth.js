@@ -20,6 +20,7 @@ const getAccessToken = (user) => {
       username: user.username,
       firstname: user.firstname,
       lastname: user.lastname,
+      profilePic: user.profilePic,
     },
     ACCESS_TOKEN_SECRET + user.username,
     { expiresIn: ACCESS_TOKEN_EXPIRY_TIME }
@@ -41,7 +42,7 @@ const getRefreshToken = (user) => {
 
 const getUserNameToken = (user) => {
   const userNameToken = jwt.sign(
-    { email: user.username },
+    { username: user.username },
     ACCESS_TOKEN_SECRET,
     { expiresIn: REFRESH_TOKEN_EXPIRY_TIME }
   );
