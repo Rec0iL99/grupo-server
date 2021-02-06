@@ -27,7 +27,7 @@ const user = new mongoose.Schema({
     type: String,
     required: true,
   },
-  signUpType: {
+  signupType: {
     type: String,
     required: true,
   },

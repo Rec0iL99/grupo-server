@@ -58,7 +58,7 @@ const signUpUser = (req, res) => {
                   email: data.email,
                   password: hashedPassword,
                   issuer: req.body.issuer,
-                  signUpType: req.body.signUpType,
+                  signupType: req.body.signupType,
                   profilePic: data.picture,
                 });
 
