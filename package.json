@@ -18,7 +18,8 @@
     "express": "^4.17.1",
     "google-auth-library": "^6.1.4",
     "jsonwebtoken": "^8.5.1",
-    "mongoose": "^5.11.12"
+    "mongoose": "^5.11.12",
+    "socket.io": "^3.1.1"
   },
   "devDependencies": {
     "eslint": "^7.2.0",

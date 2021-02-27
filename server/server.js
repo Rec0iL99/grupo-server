@@ -1,6 +1,20 @@
 /* eslint-disable global-require */
 if (process.env.NODE_ENV !== 'production') require('dotenv').config();
+
+// Creating express app
 const express = require('express');
+const app = express();
+
+// Creating the http server
+const server = require('http').createServer(app);
+
+// Importing socket-io by passing http server to make express and socket.io to run on same port
+const io = require('socket.io')(server, {
+  cors: {
+    origin: 'http://localhost:3000',
+    methods: ['GET', 'POST'],
+  },
+});
 const os = require('os');
 const mongoose = require('mongoose');
 const cookieParser = require('cookie-parser');
@@ -9,6 +23,17 @@ const cors = require('cors');
 // Route imports
 const mainRouter = require('./routes/main');
 const usersRouter = require('./routes/users');
+
+const {
+  CLIENT_CONNECTION,
+  CLIENT_JOIN_ROOM,
+  CLIENT_ROOM_MESSAGE,
+  CLIENT_CREATE_ROOM,
+} = require('./socketActions/clientActions');
+const {
+  SERVER_JOIN_ROOM,
+  SERVER_ROOM_MESSAGE,
+} = require('./socketActions/serverActions');
 
 const PORT = process.env.SERVER_PORT || 5000;
 
@@ -24,8 +49,6 @@ const PORT = process.env.SERVER_PORT || 5000;
     console.log('Failed to establish connection with DB', error);
   }
 })();
-
-const app = express();
 
 app.use(express.json());
 
@@ -50,7 +73,43 @@ app.use(cors(corsOptions));
 app.use('/', mainRouter);
 app.use('/users', usersRouter);
 
-const server = app.listen(PORT, () => {
+server.listen(PORT, () => {
   const host = os.hostname();
   console.log('Server started at ', host, ':', server.address().port);
+});
+
+const rooms = {};
+
+io.on(CLIENT_CONNECTION, (socket) => {
+  console.log('A user connected');
+
+  socket.on(CLIENT_CREATE_ROOM, (roomName, username) => {
+    const newRoon = {
+      config: {
+        admin: username,
+      },
+      users: {},
+    };
+    socket.join(roomName);
+    newRoon.users[socket.id] = username;
+    rooms[roomName] = newRoon;
+    socket.to(roomName).broadcast.emit(SERVER_JOIN_ROOM, username);
+    console.log(rooms);
+  });
+
+  socket.on(CLIENT_JOIN_ROOM, (roomName, username) => {
+    if (roomName in rooms) {
+      socket.join(roomName);
+      rooms[roomName].users[socket.id] = username;
+      socket.to(roomName).broadcast.emit(SERVER_JOIN_ROOM, username);
+      console.log(rooms);
+    }
+  });
+
+  socket.on(CLIENT_ROOM_MESSAGE, (room, message) => {
+    socket.to(room).broadcast.emit(SERVER_ROOM_MESSAGE, {
+      message: message,
+      name: rooms[room].users[socket.id],
+    });
+  });
 });
