@@ -34,6 +34,7 @@ const {
   SERVER_JOIN_ROOM,
   SERVER_ROOM_MESSAGE,
 } = require('./socketActions/serverActions');
+const SERVER_RESPONSE = require('./utils/serverResponses');
 
 const PORT = process.env.SERVER_PORT || 5000;
 
@@ -83,7 +84,7 @@ const rooms = {};
 io.on(CLIENT_CONNECTION, (socket) => {
   console.log('A user connected');
 
-  socket.on(CLIENT_CREATE_ROOM, (roomName, username) => {
+  socket.on(CLIENT_CREATE_ROOM, (roomName, username, callback) => {
     const newRoon = {
       config: {
         admin: username,
@@ -95,6 +96,7 @@ io.on(CLIENT_CONNECTION, (socket) => {
     rooms[roomName] = newRoon;
     socket.to(roomName).broadcast.emit(SERVER_JOIN_ROOM, username);
     console.log(rooms);
+    callback(SERVER_RESPONSE.ROOM_CREATION_SUCCESS);
   });
 
   socket.on(CLIENT_JOIN_ROOM, (roomName, username) => {
