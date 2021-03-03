@@ -19,7 +19,8 @@
     "google-auth-library": "^6.1.4",
     "jsonwebtoken": "^8.5.1",
     "mongoose": "^5.11.12",
-    "socket.io": "^3.1.1"
+    "socket.io": "^3.1.1",
+    "uuid": "^8.3.2"
   },
   "devDependencies": {
     "eslint": "^7.2.0",

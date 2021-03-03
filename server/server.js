@@ -19,6 +19,7 @@ const os = require('os');
 const mongoose = require('mongoose');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
+const uuid = require('uuid');
 
 // Route imports
 const mainRouter = require('./routes/main');
@@ -85,25 +86,29 @@ io.on(CLIENT_CONNECTION, (socket) => {
   console.log('A user connected');
 
   socket.on(CLIENT_CREATE_ROOM, (roomName, username, callback) => {
+    const roomCode = uuid.v4();
     const newRoon = {
       config: {
+        roomName: roomName,
         admin: username,
+        roomCode,
       },
       users: {},
     };
-    socket.join(roomName);
+    socket.join(roomCode);
     newRoon.users[socket.id] = username;
-    rooms[roomName] = newRoon;
-    socket.to(roomName).broadcast.emit(SERVER_JOIN_ROOM, username);
+    rooms[roomCode] = newRoon;
+    socket.to(roomCode).broadcast.emit(SERVER_JOIN_ROOM, username);
     console.log(rooms);
     callback(SERVER_RESPONSE.ROOM_CREATION_SUCCESS);
   });
 
-  socket.on(CLIENT_JOIN_ROOM, (roomName, username) => {
-    if (roomName in rooms) {
-      socket.join(roomName);
-      rooms[roomName].users[socket.id] = username;
-      socket.to(roomName).broadcast.emit(SERVER_JOIN_ROOM, username);
+  socket.on(CLIENT_JOIN_ROOM, (roomCode, username) => {
+    console.log('running');
+    if (roomCode in rooms) {
+      socket.join(roomCode);
+      rooms[roomCode].users[socket.id] = username;
+      socket.to(roomCode).broadcast.emit(SERVER_JOIN_ROOM, username);
       console.log(rooms);
     }
   });
