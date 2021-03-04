@@ -34,6 +34,7 @@ const {
 const {
   SERVER_JOIN_ROOM,
   SERVER_ROOM_MESSAGE,
+  SERVER_ROOM_UPDATED,
 } = require('./socketActions/serverActions');
 const SERVER_RESPONSE = require('./utils/serverResponses');
 
@@ -93,30 +94,33 @@ io.on(CLIENT_CONNECTION, (socket) => {
         admin: username,
         roomCode,
       },
-      users: {},
+      members: {},
     };
     socket.join(roomCode);
-    newRoon.users[socket.id] = username;
+    newRoon.members[socket.id] = username;
     rooms[roomCode] = newRoon;
     socket.to(roomCode).broadcast.emit(SERVER_JOIN_ROOM, username);
+    socket.to(roomCode).broadcast.emit(SERVER_ROOM_UPDATED, rooms[roomCode]);
     console.log(rooms);
-    callback(SERVER_RESPONSE.ROOM_CREATION_SUCCESS);
+    callback(rooms);
   });
 
-  socket.on(CLIENT_JOIN_ROOM, (roomCode, username) => {
+  socket.on(CLIENT_JOIN_ROOM, (roomCode, username, callback) => {
     console.log('running');
     if (roomCode in rooms) {
       socket.join(roomCode);
-      rooms[roomCode].users[socket.id] = username;
+      rooms[roomCode].members[socket.id] = username;
       socket.to(roomCode).broadcast.emit(SERVER_JOIN_ROOM, username);
+      socket.to(roomCode).broadcast.emit(SERVER_ROOM_UPDATED, rooms[roomCode]);
       console.log(rooms);
+      callback(rooms[roomCode]);
     }
   });
 
-  socket.on(CLIENT_ROOM_MESSAGE, (room, message) => {
-    socket.to(room).broadcast.emit(SERVER_ROOM_MESSAGE, {
+  socket.on(CLIENT_ROOM_MESSAGE, (roomCode, message) => {
+    socket.to(roomCode).broadcast.emit(SERVER_ROOM_MESSAGE, {
       message: message,
-      name: rooms[room].users[socket.id],
+      username: rooms[roomCode].members[socket.id],
     });
   });
 });
