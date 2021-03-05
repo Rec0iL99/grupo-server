@@ -36,7 +36,6 @@ const {
   SERVER_ROOM_MESSAGE,
   SERVER_ROOM_UPDATED,
 } = require('./socketActions/serverActions');
-const SERVER_RESPONSE = require('./utils/serverResponses');
 
 const PORT = process.env.SERVER_PORT || 5000;
 
@@ -90,37 +89,39 @@ io.on(CLIENT_CONNECTION, (socket) => {
     const roomCode = uuid.v4();
     const newRoon = {
       config: {
-        roomName: roomName,
         admin: username,
         roomCode,
       },
       members: {},
     };
-    socket.join(roomCode);
+    socket.join(roomName);
     newRoon.members[socket.id] = username;
-    rooms[roomCode] = newRoon;
-    socket.to(roomCode).broadcast.emit(SERVER_JOIN_ROOM, username);
-    socket.to(roomCode).broadcast.emit(SERVER_ROOM_UPDATED, rooms[roomCode]);
+    rooms[roomName] = newRoon;
+    socket.to(roomName).broadcast.emit(SERVER_JOIN_ROOM, username);
+    socket.to(roomName).broadcast.emit(SERVER_ROOM_UPDATED, rooms[roomName]);
     console.log(rooms);
     callback(rooms);
   });
 
   socket.on(CLIENT_JOIN_ROOM, (roomCode, username, callback) => {
-    console.log('running');
-    if (roomCode in rooms) {
-      socket.join(roomCode);
-      rooms[roomCode].members[socket.id] = username;
-      socket.to(roomCode).broadcast.emit(SERVER_JOIN_ROOM, username);
-      socket.to(roomCode).broadcast.emit(SERVER_ROOM_UPDATED, rooms[roomCode]);
-      console.log(rooms);
-      callback(rooms[roomCode]);
-    }
+    Object.keys(rooms).forEach((roomName) => {
+      if (rooms[roomName].config.roomCode === roomCode) {
+        socket.join(roomName);
+        rooms[roomName].members[socket.id] = username;
+        socket.to(roomName).broadcast.emit(SERVER_JOIN_ROOM, username);
+        socket
+          .to(roomName)
+          .broadcast.emit(SERVER_ROOM_UPDATED, rooms[roomName]);
+        console.log(rooms);
+        callback(rooms[roomName]);
+      }
+    });
   });
 
-  socket.on(CLIENT_ROOM_MESSAGE, (roomCode, message) => {
-    socket.to(roomCode).broadcast.emit(SERVER_ROOM_MESSAGE, {
+  socket.on(CLIENT_ROOM_MESSAGE, (roomName, message) => {
+    socket.to(roomName).broadcast.emit(SERVER_ROOM_MESSAGE, {
       message: message,
-      username: rooms[roomCode].members[socket.id],
+      username: rooms[roomName].members[socket.id],
     });
   });
 });
