@@ -93,6 +93,7 @@ io.on(CLIENT_CONNECTION, (socket) => {
         roomCode,
       },
       members: {},
+      messages: [],
     };
     socket.join(roomName);
     newRoon.members[socket.id] = username;
@@ -108,20 +109,49 @@ io.on(CLIENT_CONNECTION, (socket) => {
       if (rooms[roomName].config.roomCode === roomCode) {
         socket.join(roomName);
         rooms[roomName].members[socket.id] = username;
+        const newRoomAlert = {
+          type: 'room-alert-message',
+          username,
+        };
+        console.log(rooms[roomName].messages);
+        rooms[roomName].messages.push(newRoomAlert);
         socket.to(roomName).broadcast.emit(SERVER_JOIN_ROOM, username);
         socket
           .to(roomName)
           .broadcast.emit(SERVER_ROOM_UPDATED, rooms[roomName]);
         console.log(rooms);
+        console.log(rooms[roomName].messages[0]);
         callback(rooms[roomName]);
       }
     });
   });
 
-  socket.on(CLIENT_ROOM_MESSAGE, (roomName, message) => {
-    socket.to(roomName).broadcast.emit(SERVER_ROOM_MESSAGE, {
-      message: message,
-      username: rooms[roomName].members[socket.id],
-    });
-  });
+  socket.on(
+    CLIENT_ROOM_MESSAGE,
+    (roomName, username, chatMessage, callback) => {
+      // Calculating the date when chatMessage was posted
+      const today = new Date();
+      const date = `${String(today.getDate()).padStart(2, '0')}/${String(
+        today.getMonth() + 1
+      ).padStart(2, '0')}/${today.getFullYear()}`;
+      const time = `${today.getHours()}:${today.getMinutes()}`;
+      const timeOfMessage = `${date} at ${time}`;
+
+      const newChatMessage = {
+        type: 'room-chat-message',
+        username,
+        firstname: 'defaultFirstName',
+        lastname: 'defaultLastName',
+        profilePic: 'https://bit.ly/dan-abramov',
+        timeOfMessage,
+        chatMessage,
+      };
+      rooms[roomName].messages.concat(newChatMessage);
+      socket.to(roomName).broadcast.emit(SERVER_ROOM_MESSAGE, {
+        chatMessage: chatMessage,
+        username: rooms[roomName].members[socket.id],
+      });
+      callback(newChatMessage);
+    }
+  );
 });
