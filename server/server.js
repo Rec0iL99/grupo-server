@@ -91,6 +91,7 @@ io.on(CLIENT_CONNECTION, (socket) => {
       config: {
         admin: username,
         roomCode,
+        roomName,
       },
       members: {},
       messages: [],
@@ -101,7 +102,7 @@ io.on(CLIENT_CONNECTION, (socket) => {
     socket.to(roomName).broadcast.emit(SERVER_JOIN_ROOM, username);
     socket.to(roomName).broadcast.emit(SERVER_ROOM_UPDATED, rooms[roomName]);
     console.log(rooms);
-    callback(rooms);
+    callback(rooms[roomName]);
   });
 
   socket.on(CLIENT_JOIN_ROOM, (roomCode, username, callback) => {
@@ -137,7 +138,7 @@ io.on(CLIENT_CONNECTION, (socket) => {
       const time = `${today.getHours()}:${today.getMinutes()}`;
       const timeOfMessage = `${date} at ${time}`;
 
-      const newChatMessage = {
+      const newRoomMessage = {
         type: 'room-chat-message',
         username,
         firstname: 'defaultFirstName',
@@ -146,12 +147,12 @@ io.on(CLIENT_CONNECTION, (socket) => {
         timeOfMessage,
         chatMessage,
       };
-      rooms[roomName].messages.concat(newChatMessage);
+      rooms[roomName].messages.push(newRoomMessage);
       socket.to(roomName).broadcast.emit(SERVER_ROOM_MESSAGE, {
         chatMessage: chatMessage,
         username: rooms[roomName].members[socket.id],
       });
-      callback(newChatMessage);
+      callback(newRoomMessage);
     }
   );
 });
