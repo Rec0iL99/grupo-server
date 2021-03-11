@@ -32,9 +32,8 @@ const {
   CLIENT_CREATE_ROOM,
 } = require('./socketActions/clientActions');
 const {
-  SERVER_JOIN_ROOM,
-  SERVER_ROOM_MESSAGE,
-  SERVER_ROOM_UPDATED,
+  SERVER_NEW_ROOM_MEMBER,
+  SERVER_NEW_ROOM_MESSAGE,
 } = require('./socketActions/serverActions');
 
 const PORT = process.env.SERVER_PORT || 5000;
@@ -80,48 +79,77 @@ server.listen(PORT, () => {
   console.log('Server started at ', host, ':', server.address().port);
 });
 
+// The main rooms object (will be using a DB later)
 const rooms = {};
 
 io.on(CLIENT_CONNECTION, (socket) => {
   console.log('A user connected');
 
   socket.on(CLIENT_CREATE_ROOM, (roomName, username, callback) => {
+    // Creating unique room code for room
     const roomCode = uuid.v4();
-    const newRoon = {
+    const newRoom = {
       config: {
         admin: username,
         roomCode,
         roomName,
+        roomAvatar:
+          'https://visualpharm.com/assets/742/Connect%20Develop-595b40b65ba036ed117d3e66.svg',
       },
-      members: {},
+      members: [],
       messages: [],
     };
+    const newMember = {
+      username,
+      profilePic: 'https://bit.ly/dan-abramov',
+      online: true,
+    };
+    const newRoomMessage = {
+      type: 'room-alert-message',
+      username,
+      action: 'joined-room',
+    };
+    // Socket of client joins the room
     socket.join(roomName);
-    newRoon.members[socket.id] = username;
-    rooms[roomName] = newRoon;
-    socket.to(roomName).broadcast.emit(SERVER_JOIN_ROOM, username);
-    socket.to(roomName).broadcast.emit(SERVER_ROOM_UPDATED, rooms[roomName]);
+    newRoom.members.push(newMember);
+    newRoom.messages.push(newRoomMessage);
+    rooms[roomName] = newRoom;
+    // socket.to(roomName).broadcast.emit(SERVER_ROOM_UPDATED, rooms[roomName]);
     console.log(rooms);
+    // Sending newly created room data back to client on callback
     callback(rooms[roomName]);
   });
 
   socket.on(CLIENT_JOIN_ROOM, (roomCode, username, callback) => {
     Object.keys(rooms).forEach((roomName) => {
+      // Checking if roomCode provided by client is valid
       if (rooms[roomName].config.roomCode === roomCode) {
+        // Socket of client joins the room
         socket.join(roomName);
-        rooms[roomName].members[socket.id] = username;
-        const newRoomAlert = {
+        const newMember = {
+          username,
+          profilePic: 'https://bit.ly/dan-abramov',
+          online: true,
+        };
+        rooms[roomName].members.push(newMember);
+        // Creating a new room alert
+        const newRoomMessage = {
           type: 'room-alert-message',
           username,
+          action: 'joined-room',
         };
-        console.log(rooms[roomName].messages);
-        rooms[roomName].messages.push(newRoomAlert);
-        socket.to(roomName).broadcast.emit(SERVER_JOIN_ROOM, username);
-        socket
-          .to(roomName)
-          .broadcast.emit(SERVER_ROOM_UPDATED, rooms[roomName]);
-        console.log(rooms);
-        console.log(rooms[roomName].messages[0]);
+        rooms[roomName].messages.push(newRoomMessage);
+        // Broadcasting to other members of new member
+        socket.to(roomName).broadcast.emit(SERVER_NEW_ROOM_MEMBER, {
+          roomName,
+          member: newMember,
+        });
+        // Broadcasting to other members of new room message
+        socket.to(roomName).broadcast.emit(SERVER_NEW_ROOM_MESSAGE, {
+          roomName,
+          roomMessage: newRoomMessage,
+        });
+        // Sending newly joined room data back to client on callback
         callback(rooms[roomName]);
       }
     });
@@ -148,9 +176,9 @@ io.on(CLIENT_CONNECTION, (socket) => {
         chatMessage,
       };
       rooms[roomName].messages.push(newRoomMessage);
-      socket.to(roomName).broadcast.emit(SERVER_ROOM_MESSAGE, {
-        chatMessage: chatMessage,
-        username: rooms[roomName].members[socket.id],
+      socket.to(roomName).broadcast.emit(SERVER_NEW_ROOM_MESSAGE, {
+        roomName,
+        roomMessage: newRoomMessage,
       });
       callback(newRoomMessage);
     }
