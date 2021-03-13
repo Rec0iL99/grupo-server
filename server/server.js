@@ -92,6 +92,9 @@ try {
     // Retrieving data about user from custom header
     const { user } = socket.handshake.headers;
 
+    // Destructing necessary properties from user obj
+    const { username, firstname, lastname, profilePic } = user;
+
     try {
       addUser(socket, user);
       // Emiting to user that connection has been established
@@ -100,7 +103,7 @@ try {
       console.log(error.message);
     }
 
-    socket.on(CLIENT_CREATE_ROOM, (roomName, username, callback) => {
+    socket.on(CLIENT_CREATE_ROOM, (roomName, callback) => {
       // Creating unique room code for room
       const roomCode = uuid.v4();
       const newRoom = {
@@ -116,7 +119,7 @@ try {
       };
       const newMember = {
         username,
-        profilePic: 'https://bit.ly/dan-abramov',
+        profilePic,
         online: true,
       };
       const newRoomMessage = {
@@ -129,13 +132,12 @@ try {
       newRoom.members.push(newMember);
       newRoom.messages.push(newRoomMessage);
       rooms[roomName] = newRoom;
-      // socket.to(roomName).broadcast.emit(SERVER_ROOM_UPDATED, rooms[roomName]);
       console.log(rooms);
       // Sending newly created room data back to client on callback
       callback(rooms[roomName]);
     });
 
-    socket.on(CLIENT_JOIN_ROOM, (roomCode, username, callback) => {
+    socket.on(CLIENT_JOIN_ROOM, (roomCode, callback) => {
       Object.keys(rooms).forEach((roomName) => {
         // Checking if roomCode provided by client is valid
         if (rooms[roomName].config.roomCode === roomCode) {
@@ -143,7 +145,7 @@ try {
           socket.join(roomName);
           const newMember = {
             username,
-            profilePic: 'https://bit.ly/dan-abramov',
+            profilePic,
             online: true,
           };
           rooms[roomName].members.push(newMember);
@@ -170,34 +172,31 @@ try {
       });
     });
 
-    socket.on(
-      CLIENT_ROOM_MESSAGE,
-      (roomName, username, chatMessage, callback) => {
-        // Calculating the date when chatMessage was posted
-        const today = new Date();
-        const date = `${String(today.getDate()).padStart(2, '0')}/${String(
-          today.getMonth() + 1
-        ).padStart(2, '0')}/${today.getFullYear()}`;
-        const time = `${today.getHours()}:${today.getMinutes()}`;
-        const timeOfMessage = `${date} at ${time}`;
+    socket.on(CLIENT_ROOM_MESSAGE, (roomName, chatMessage, callback) => {
+      // Calculating the date when chatMessage was posted
+      const today = new Date();
+      const date = `${String(today.getDate()).padStart(2, '0')}/${String(
+        today.getMonth() + 1
+      ).padStart(2, '0')}/${today.getFullYear()}`;
+      const time = `${today.getHours()}:${today.getMinutes()}`;
+      const timeOfMessage = `${date} at ${time}`;
 
-        const newRoomMessage = {
-          type: 'room-chat-message',
-          username,
-          firstname: 'defaultFirstName',
-          lastname: 'defaultLastName',
-          profilePic: 'https://bit.ly/dan-abramov',
-          timeOfMessage,
-          chatMessage,
-        };
-        rooms[roomName].messages.push(newRoomMessage);
-        socket.to(roomName).broadcast.emit(SERVER_NEW_ROOM_MESSAGE, {
-          roomName,
-          roomMessage: newRoomMessage,
-        });
-        callback(newRoomMessage);
-      }
-    );
+      const newRoomMessage = {
+        type: 'room-chat-message',
+        username,
+        firstname,
+        lastname,
+        profilePic,
+        timeOfMessage,
+        chatMessage,
+      };
+      rooms[roomName].messages.push(newRoomMessage);
+      socket.to(roomName).broadcast.emit(SERVER_NEW_ROOM_MESSAGE, {
+        roomName,
+        roomMessage: newRoomMessage,
+      });
+      callback(newRoomMessage);
+    });
   });
 } catch (error) {
   console.log(error.message);

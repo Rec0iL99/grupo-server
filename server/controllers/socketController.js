@@ -7,9 +7,18 @@ const checkAuth = (socket, next) => {
     const accessToken = socket.handshake.headers.authorization.split(' ')[1];
     const payload = checkToken(accessToken);
 
+    // Constructing the user object with only necessary properties
+    const user = {
+      email: payload.email,
+      username: payload.username,
+      firstname: payload.firstname,
+      lastname: payload.lastname,
+      profilePic: payload.profilePic,
+    };
+
     if (payload) {
       /* eslint-disable */
-      socket.handshake.headers.user = payload;
+      socket.handshake.headers.user = user;
       next();
     } else {
       throw new Error('User not authorized');
