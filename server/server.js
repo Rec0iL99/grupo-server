@@ -93,7 +93,7 @@ try {
     const { user } = socket.handshake.headers;
 
     // Destructing necessary properties from user obj
-    const { username, firstname, lastname, profilePic } = user;
+    const { username, name, profilePic, profileLink } = user;
 
     try {
       addUser(socket, user);
@@ -120,6 +120,7 @@ try {
       const newMember = {
         username,
         profilePic,
+        profileLink,
         online: true,
       };
       const newRoomMessage = {
@@ -146,6 +147,7 @@ try {
           const newMember = {
             username,
             profilePic,
+            profileLink,
             online: true,
           };
           rooms[roomName].members.push(newMember);
@@ -184,8 +186,7 @@ try {
       const newRoomMessage = {
         type: 'room-chat-message',
         username,
-        firstname,
-        lastname,
+        name,
         profilePic,
         timeOfMessage,
         chatMessage,

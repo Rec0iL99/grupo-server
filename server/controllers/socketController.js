@@ -11,9 +11,9 @@ const checkAuth = (socket, next) => {
     const user = {
       email: payload.email,
       username: payload.username,
-      firstname: payload.firstname,
-      lastname: payload.lastname,
+      name: payload.name,
       profilePic: payload.profilePic,
+      profileLink: payload.profileLink,
     };
 
     if (payload) {
