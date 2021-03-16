@@ -10,6 +10,12 @@ const {
 const githubAuth = require('../utils/githubAuth');
 const SERVER_RESPONSE = require('../utils/serverResponses');
 
+// Destructing array containing secrets for refresh and access token
+const [ACCESS_TOKEN_SECRET, REFRESH_TOKEN_SECRET] = [
+  process.env.ACCESS_TOKEN_SECRET,
+  process.env.REFRESH_TOKEN_SECRET,
+];
+
 // Sign up new user to grupo
 const signUpUser = (req, res) => {
   try {
@@ -192,18 +198,14 @@ const preCheckUser = async (req, res) => {
 
     // Extracting username from userNameToken
     try {
-      username = verifyToken(userNameToken, process.env.ACCESS_TOKEN_SECRET)
-        .username;
+      username = verifyToken(userNameToken, ACCESS_TOKEN_SECRET).username;
     } catch (error) {
       throw new Error('Token Not Provided');
     }
 
     // Verifying accessToken
     try {
-      payload = verifyToken(
-        accessToken,
-        process.env.ACCESS_TOKEN_SECRET + username
-      );
+      payload = verifyToken(accessToken, ACCESS_TOKEN_SECRET + username);
     } catch (error) {
       if (error.message !== 'jwt expired') {
         throw new Error('Token Man Handled');
@@ -213,13 +215,10 @@ const preCheckUser = async (req, res) => {
     // If accessToken verification failed, thats means server has to renew accessToken
     if (!payload) {
       // Getting userData from db
-      const user = await User.findOne({ userName: username });
+      const user = await User.findOne({ username });
 
       // Verifying refreshToken
-      payload = verifyToken(
-        refreshToken,
-        process.env.REFRESH_SECRECT_KEY + user.password
-      );
+      payload = verifyToken(refreshToken, REFRESH_TOKEN_SECRET + user.password);
 
       // Both accessToken and refreshToken are invalid
       if (!payload) {

@@ -34,7 +34,7 @@ const getRefreshToken = (user) => {
       email: user.email,
       username: user.username,
     },
-    REFRESH_TOKEN_SECRET + user.username,
+    REFRESH_TOKEN_SECRET + user.password,
     { expiresIn: REFRESH_TOKEN_EXPIRY_TIME }
   );
   return refreshToken;

@@ -74,7 +74,6 @@ const authRequest = async (req, res, next) => {
     // Moving on to the next set of middlewares
     next();
   } catch (error) {
-    console.log(error);
     res.status(401).json({
       status: false,
       payload: {
