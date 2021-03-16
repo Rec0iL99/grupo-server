@@ -48,8 +48,6 @@ const PORT = process.env.SERVER_PORT || 5000;
   }
 })();
 
-app.use(express.json());
-
 app.use(cookieParser());
 
 // Adding cors options and whitelisting the client url
@@ -66,6 +64,7 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
+app.use(express.json());
 
 // Adding the routes to server
 app.use('/', mainRouter);
