@@ -6,11 +6,7 @@ const user = new mongoose.Schema({
     required: true,
     unique: true,
   },
-  firstname: {
-    type: String,
-    required: true,
-  },
-  lastname: {
+  name: {
     type: String,
     required: true,
   },
@@ -32,6 +28,10 @@ const user = new mongoose.Schema({
     required: true,
   },
   profilePic: {
+    type: String,
+    required: true,
+  },
+  profileLink: {
     type: String,
     required: true,
   },

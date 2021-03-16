@@ -7,6 +7,7 @@ const {
   getAccessToken,
 } = require('../utils/auth');
 const googleAuth = require('../utils/googleAuth');
+const githubAuth = require('../utils/githubAuth');
 const SERVER_RESPONSE = require('../utils/serverResponses');
 
 // Sign up new user to grupo
@@ -96,6 +97,77 @@ const signUpUser = (req, res) => {
         })
         .catch((error) => {
           console.log(error);
+          res.status(401).json({
+            status: false,
+            payload: {
+              message: SERVER_RESPONSE.ERRORTOKEN,
+            },
+          });
+        });
+    } else if (req.body.issuer === 'github') {
+      githubAuth(req.body.accessCode)
+        .then((response) => {
+          User.find({ email: response.email })
+            .exec()
+            /* eslint-disable consistent-return */
+            .then((user) => {
+              if (user.length === 1) {
+                return res.status(409).json({
+                  status: false,
+                  payload: {
+                    message: SERVER_RESPONSE.CONFLICT,
+                  },
+                });
+              }
+              bcrypt.hash(req.body.password, 10, (error, hashedPassword) => {
+                if (error) {
+                  console.log(error);
+                  throw new Error('Password encryption failed');
+                }
+
+                const newUser = new User({
+                  username: response.login,
+                  name: response.name,
+                  email: response.email,
+                  password: hashedPassword,
+                  issuer: req.body.issuer,
+                  signupType: req.body.signupType,
+                  profilePic: response.avatar_url,
+                  profileLink: response.html_url,
+                });
+
+                console.log(newUser);
+
+                newUser
+                  .save()
+                  .then(() => {
+                    res.status(201).json({
+                      status: true,
+                      payload: {
+                        message: SERVER_RESPONSE.CREATED,
+                      },
+                    });
+                  })
+                  .catch(() => {
+                    res.status(406).json({
+                      status: false,
+                      payload: {
+                        message: SERVER_RESPONSE.MISSING,
+                      },
+                    });
+                  });
+              });
+            })
+            .catch(() => {
+              res.status(500).json({
+                status: false,
+                payload: {
+                  message: SERVER_RESPONSE.ERROR,
+                },
+              });
+            });
+        })
+        .catch(() => {
           res.status(401).json({
             status: false,
             payload: {

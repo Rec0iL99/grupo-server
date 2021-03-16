@@ -20,6 +20,7 @@
     "jsonwebtoken": "^8.5.1",
     "mongoose": "^5.11.12",
     "socket.io": "^3.1.1",
+    "superagent": "^6.1.0",
     "uuid": "^8.3.2"
   },
   "devDependencies": {
