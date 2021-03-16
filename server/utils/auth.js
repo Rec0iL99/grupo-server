@@ -18,9 +18,9 @@ const getAccessToken = (user) => {
     {
       email: user.email,
       username: user.username,
-      firstname: user.firstname,
-      lastname: user.lastname,
+      name: user.name,
       profilePic: user.profilePic,
+      profileLink: user.profileLink,
     },
     ACCESS_TOKEN_SECRET + user.username,
     { expiresIn: ACCESS_TOKEN_EXPIRY_TIME }
