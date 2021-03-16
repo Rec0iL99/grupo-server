@@ -188,6 +188,7 @@ try {
         username,
         name,
         profilePic,
+        profileLink,
         timeOfMessage,
         chatMessage,
       };
