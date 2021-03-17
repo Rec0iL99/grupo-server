@@ -33,7 +33,7 @@ const {
 const { checkAuth } = require('./controllers/socketController');
 const { addUser } = require('./controllers/socketUserController');
 
-const PORT = process.env.SERVER_PORT || 5000;
+const PORT = process.env.PORT || 5000;
 
 // Connecting to the database
 (async () => {
