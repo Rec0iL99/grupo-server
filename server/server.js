@@ -51,7 +51,7 @@ const PORT = process.env.PORT || 5000;
 app.use(cookieParser());
 
 // Adding cors options and whitelisting the client url
-const whitelist = ['http://localhost:3000'];
+const whitelist = ['http://localhost:3000', 'https://grupo-chat.netlify.app'];
 const corsOptions = {
   origin: function (origin, callback) {
     if (whitelist.indexOf(origin) !== -1 || !origin) {
@@ -78,7 +78,7 @@ server.listen(PORT, () => {
 // Passing http server to make express and socket.io to run on same port
 const io = socketio(server, {
   cors: {
-    origin: 'http://localhost:3000',
+    origin: process.env.CLIENT_URL,
     methods: ['GET', 'POST'],
   },
 });
