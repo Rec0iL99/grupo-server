@@ -3,10 +3,19 @@ if (process.env.NODE_ENV !== 'production') require('dotenv').config();
 
 // Creating express app
 const express = require('express');
-const app = express();
+const https = require('https');
+const path = require('path');
+const fs = require('fs');
 
-// Creating the http server
-const server = require('http').createServer(app);
+const app = express();
+// Creating the https server
+const server = https.createServer(
+  {
+    key: fs.readFileSync(path.join(__dirname, 'cert', 'private.key')),
+    cert: fs.readFileSync(path.join(__dirname, 'cert', 'certificate.pem')),
+  },
+  app
+);
 
 const socketio = require('socket.io');
 const os = require('os');
